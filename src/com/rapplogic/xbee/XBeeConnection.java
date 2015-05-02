@@ -1,8 +1,6 @@
 package com.rapplogic.xbee;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 /**
  * Represents a protocol independent connection to a XBee radio (e.g. could be a serial connection, socket, xmpp etc.)
@@ -19,7 +17,9 @@ import java.io.OutputStream;
  *
  */
 public interface XBeeConnection {
-	public OutputStream getOutputStream();
-	public InputStream getInputStream();
-	public void close() throws IOException; 
+	public int getByte() throws IOException;
+	public boolean hasData() throws IOException;
+	public void close() throws IOException;
+	public void writeIntArray(int[] packet) throws IOException;
+	public boolean isConnected();
 }

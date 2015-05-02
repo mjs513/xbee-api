@@ -138,13 +138,14 @@ public class InputStreamThread implements Runnable {
 		try {
 			while (!done) {
 				try {
-					if (connection.getInputStream().available() > 0) {
+					if (connection.hasData()) {
 						log.debug("About to read from input stream");
-						val = connection.getInputStream().read();
+
+						val = connection.getByte();
 						log.debug("Read " + ByteUtils.formatByte(val) + " from input stream");
 						
 						if (val == XBeePacket.SpecialByte.START_BYTE.getValue()) {
-							packetStream = new PacketParser(connection.getInputStream());
+							packetStream = new PacketParser(connection);
 							response = packetStream.parsePacket();
 							
 							if (log.isInfoEnabled()) {
@@ -163,7 +164,7 @@ public class InputStreamThread implements Runnable {
 						// we will wait here for RXTX to notify us of new data
 						synchronized (this.connection) {
 							// There's a chance that we got notified after the first in.available check
-							if (connection.getInputStream().available() > 0) {
+							if (connection.hasData()) {
 								continue;
 							}
 							

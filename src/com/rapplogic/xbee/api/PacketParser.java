@@ -20,12 +20,12 @@
 package com.rapplogic.xbee.api;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import com.rapplogic.xbee.XBeeConnection;
 import com.rapplogic.xbee.api.wpan.RxResponse16;
 import com.rapplogic.xbee.api.wpan.RxResponse64;
 import com.rapplogic.xbee.api.wpan.RxResponseIoSample;
@@ -37,7 +37,6 @@ import com.rapplogic.xbee.api.zigbee.ZNetRxResponse;
 import com.rapplogic.xbee.api.zigbee.ZNetTxStatusResponse;
 import com.rapplogic.xbee.util.ByteUtils;
 import com.rapplogic.xbee.util.IIntInputStream;
-import com.rapplogic.xbee.util.InputStreamWrapper;
 import com.rapplogic.xbee.util.IntArrayOutputStream;
 
 /**
@@ -55,8 +54,6 @@ public class PacketParser implements IIntInputStream, IPacketParser {
 
 	private final static Logger log = Logger.getLogger(PacketParser.class);
 
-	private IIntInputStream in;
-	
 	// size of packet after special bytes have been escaped
 	private XBeePacketLength length;
 	private Checksum checksum = new Checksum();
@@ -69,6 +66,8 @@ public class PacketParser implements IIntInputStream, IPacketParser {
 	private XBeeResponse response;
 	private ApiId apiId;
 	private int intApiId;
+	
+	private final XBeeConnection connection;
 	
 	private static Map<Integer, Class<? extends XBeeResponse>> handlerMap = new HashMap<Integer, Class<? extends XBeeResponse>>();
 	
@@ -112,16 +111,11 @@ public class PacketParser implements IIntInputStream, IPacketParser {
 			throw new IllegalArgumentException("No response handler for: " + apiId);
 		}
 	}
-	
-	public PacketParser(InputStream in) {
-		this.in = new InputStreamWrapper(in);
+
+	public PacketParser(XBeeConnection connection) {
+		this.connection = connection;
 	}
-	
-	// for parsing a packet from a byte array
-	public PacketParser(IIntInputStream in) {
-		this.in = in;
-	}
-	
+
 	/**
 	 * This method is guaranteed (unless I screwed up) to return an instance of XBeeResponse and should never throw an exception
 	 * If an exception occurs, it will be packaged and returned as an ErrorResponse. 
@@ -215,7 +209,7 @@ public class PacketParser implements IIntInputStream, IPacketParser {
 	 * @throws IOException
 	 */
 	private int readFromStream() throws IOException {
-		int b = in.read();
+		int b = connection.getByte();
 		// save raw bytes to transfer via network
 		rawBytes.write(b);		
 		

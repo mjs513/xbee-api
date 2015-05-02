@@ -19,19 +19,18 @@
 
 package com.rapplogic.xbee;
 
-import gnu.io.CommPortIdentifier;
-import gnu.io.PortInUseException;
-import gnu.io.SerialPort;
-import gnu.io.SerialPortEvent;
-import gnu.io.SerialPortEventListener;
-import gnu.io.UnsupportedCommOperationException;
-
-import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Enumeration;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.TooManyListenersException;
+
+import jssc.SerialPort;
+import jssc.SerialPortEvent;
+import jssc.SerialPortEventListener;
+import jssc.SerialPortException;
+import jssc.SerialPortList;
+import jssc.SerialPortTimeoutException;
 
 import org.apache.log4j.Logger;
 
@@ -47,68 +46,42 @@ import com.rapplogic.xbee.api.XBeeException;
 public class SerialPortConnection implements XBeeConnection, SerialPortEventListener {
 
 	private final static Logger log = Logger.getLogger(SerialPortConnection.class);
-	
-	private InputStream inputStream;
-	private OutputStream outputStream;
+
+	private static final int DEFAULT_TIMEOUT = 5000;
 
 	private SerialPort serialPort;
 	
+	private int timeout;
+
 	public SerialPortConnection() {
-	
+
 	}
-	
-	public void openSerialPort(String port, int baudRate) throws PortInUseException, UnsupportedCommOperationException, TooManyListenersException, IOException, XBeeException {
-		this.openSerialPort(port, "XBee", 0, baudRate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE, SerialPort.FLOWCONTROL_NONE);
+
+	public void openSerialPort(String port, int baudRate) throws TooManyListenersException, IOException, XBeeException, SerialPortException {
+		this.openSerialPort(port, "XBee", DEFAULT_TIMEOUT, baudRate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE, SerialPort.FLOWCONTROL_NONE);
 	}
-	
-	public void openSerialPort(String port, String appName, int timeout, int baudRate) throws PortInUseException, UnsupportedCommOperationException, TooManyListenersException, IOException, XBeeException {
+
+	public void openSerialPort(String port, String appName, int timeout, int baudRate) throws TooManyListenersException, IOException, XBeeException, SerialPortException {
 		this.openSerialPort(port, appName, timeout, baudRate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE, SerialPort.FLOWCONTROL_NONE);
 	}
-	
-	@SuppressWarnings("unchecked")
-	public void openSerialPort(String port, String appName, int timeout, int baudRate, int dataBits, int stopBits, int parity, int flowControl) throws PortInUseException, UnsupportedCommOperationException, TooManyListenersException, IOException, XBeeException {
+
+	public void openSerialPort(String port, String appName, int timeout, int baudRate, int dataBits, int stopBits, int parity, int flowControl) throws TooManyListenersException, IOException, XBeeException, SerialPortException {
 		// Apparently you can't query for a specific port, but instead must iterate
-		Enumeration<CommPortIdentifier> portList = CommPortIdentifier.getPortIdentifiers();
-		
-		CommPortIdentifier portId = null;
+		Set<String> serialPorts = new HashSet<>(Arrays.asList(SerialPortList.getPortNames()));
 
-		boolean found = false;
-		
-		while (portList.hasMoreElements()) {
-
-			portId = portList.nextElement();
-
-			if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
-
-				//log.debug("Found port: " + portId.getName());
-
-				if (portId.getName().equals(port)) {
-					//log.debug("Using Port: " + portId.getName());
-					found = true;
-					break;
-				}
-			}
-		}
-
-		if (!found) {
+		if (!serialPorts.contains(port)) {
 			throw new XBeeException("Could not find port: " + port);
 		}
-		
-		serialPort = (SerialPort) portId.open(appName, timeout);
-		
-		serialPort.setSerialPortParams(baudRate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+
+		this.timeout = timeout;
+
+		serialPort = new SerialPort(port);
+		serialPort.openPort();
+
+		serialPort.setParams(baudRate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
 		serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_NONE);
 
-		// activate the DATA_AVAILABLE notifier
-		serialPort.notifyOnDataAvailable(true);
-		
-		// activate the OUTPUT_BUFFER_EMPTY notifier
-		//serialPort.notifyOnOutputEmpty(true);
-		
 		serialPort.addEventListener(this);
-		
-		inputStream = serialPort.getInputStream();
-		outputStream = new BufferedOutputStream(serialPort.getOutputStream());
 	}
 
 	/**
@@ -117,58 +90,62 @@ public class SerialPortConnection implements XBeeConnection, SerialPortEventList
 	@Override
 	public void close() throws IOException {
 		try {
-			serialPort.getInputStream().close();
-		} catch (NullPointerException e) {
-			
-		}
-
-		try {
-			serialPort.getOutputStream().close();
-		} catch (NullPointerException e) {
-
-		}
-		
-		try {
-			// this call blocks while thread is attempting to read from inputstream
-			serialPort.close();
-		} catch (NullPointerException e) {
-
+			serialPort.closePort();
+		} catch (SerialPortException e) {
+			throw new IOException(e);
 		}
 	}
-	
-	public OutputStream getOutputStream() {
-		return outputStream;
-	}
 
-	public InputStream getInputStream() {
-		return inputStream;
-	}
-	
 	public void serialEvent(SerialPortEvent event) {
-		
-		switch (event.getEventType()) {	
-			case SerialPortEvent.DATA_AVAILABLE:
-
+		try {
+			if (serialPort.getInputBufferBytesCount() > 0) {
 				try {
-					if (this.getInputStream().available() > 0) {
-						try {
-							log.debug("serialEvent: " + serialPort.getInputStream().available() + " bytes available");
-							
-							synchronized (this) {
-								this.notify();										
-							}
-						} catch (Exception e) {
-							log.error("Error in handleSerialData method", e);
-						}				
-					} else {
-						log.warn("We were notified of new data but available() is returning 0");
+					log.debug("serialEvent: " + serialPort.getInputBufferBytesCount() + " bytes available");
+
+					synchronized (this) {
+						this.notify();
 					}
-				} catch (IOException ex) {
-					// it's best not to throw the exception because the RXTX thread may not be prepared to handle
-					log.error("RXTX error in serialEvent method", ex);
+				} catch (Exception e) {
+					log.error("Error in handleSerialData method", e);
 				}
-			default:
-				log.debug("Ignoring serial port event type: " + event.getEventType());
-		}		
+			} else {
+				log.warn("We were notified of new data but available() is returning 0");
+			}
+		} catch (SerialPortException ex) {
+			// it's best not to throw the exception because the RXTX thread may not be prepared to handle
+			log.error("RXTX error in serialEvent method", ex);
+		}
+	}
+
+	@Override
+	public int getByte() throws IOException {
+		try {
+			return serialPort.readBytes(1, timeout)[0] & 0xFF;
+		} catch (SerialPortException | SerialPortTimeoutException e) {
+			throw new IOException(e);
+		}
+	}
+
+	@Override
+	public boolean hasData() throws IOException {
+		try {
+			return serialPort.getInputBufferBytesCount() > 0;
+		} catch (SerialPortException e) {
+			throw new IOException(e);
+		}
+	}
+
+	@Override
+	public void writeIntArray(int[] packet) throws IOException {
+		try {
+			serialPort.writeIntArray(packet);
+		} catch (SerialPortException e) {
+			throw new IOException(e);
+		}
+	}
+
+	@Override
+	public boolean isConnected() {
+		return serialPort != null && serialPort.isOpened();
 	}
 }

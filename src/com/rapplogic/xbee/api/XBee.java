@@ -25,6 +25,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import jssc.SerialPortException;
+
 import org.apache.log4j.Logger;
 
 import com.rapplogic.xbee.SerialPortConnection;
@@ -233,7 +235,7 @@ public class XBee implements IXBee {
 	 * @param packet
 	 * @throws RuntimeException when serial device is disconnected
 	 */
-	public void sendPacket(int[] packet)  throws IOException {
+	public void sendPacket(int[] packet) throws IOException {
 		// TODO should we synchronize on read lock so we are sending/recv. simultaneously?
 		// TODO call request listener with byte array
 		
@@ -245,14 +247,17 @@ public class XBee implements IXBee {
 			log.info("Sending packet to XBee " + ByteUtils.toBase16(packet));	
 		}
 
+		xbeeConnection.writeIntArray(packet);
+
+    	/*
         for (int packetByte : packet) {
         	// if connection lost
         	//Caused by: com.rapplogic.xbee.api.XBeeException
         	//Caused by: java.io.IOException: Input/output error in writeArray
         	xbeeConnection.getOutputStream().write(packetByte);
         }
-
         xbeeConnection.getOutputStream().flush();
+    	 */
 	}
 
 	/**
@@ -540,14 +545,11 @@ public class XBee implements IXBee {
 		}
 		
 		try {
-//			xbeeConnection.getOutputStream().close();
 			xbeeConnection.close();
 		} catch (IOException e) {
 			log.warn("Failed to close connection", e);
 		}
-		
 
-		
 		this.type = null;
 		parser = null;
 		xbeeConnection = null;
@@ -561,11 +563,7 @@ public class XBee implements IXBee {
 	 */
 	public boolean isConnected() {
 		try {
-			if (parser.getXBeeConnection().getInputStream() != null && parser.getXBeeConnection().getOutputStream() != null) {
-				return true;
-			}
-			
-			return false;
+			return xbeeConnection.isConnected();
 		} catch (Exception e) {
 			return false;
 		}
