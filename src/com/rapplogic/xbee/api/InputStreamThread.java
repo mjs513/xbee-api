@@ -48,6 +48,7 @@ public class InputStreamThread implements Runnable {
 	private volatile boolean done = false;
 	private final XBeeConnection connection;
 	private XBeeConfiguration conf;
+	private XBeeInformation info;
 	
 	public XBeeConnection getXBeeConnection() {
 		return connection;
@@ -57,6 +58,7 @@ public class InputStreamThread implements Runnable {
 	
 	// TODO use weak references
 	private final List<PacketListener> packetListenerList = new LinkedList<PacketListener>();
+
 	
 	public List<PacketListener> getPacketListenerList() {
 		return packetListenerList;
@@ -66,9 +68,10 @@ public class InputStreamThread implements Runnable {
 		return responseQueue;
 	}
 
-	public InputStreamThread(final XBeeConnection connection, XBeeConfiguration conf) {
+	public InputStreamThread(final XBeeConnection connection, XBeeConfiguration conf, XBeeInformation info) {
 		this.connection = connection;
 		this.conf = conf;
+		this.info = info;
 		
         // Create an executor to deliver incoming packets to listeners. We'll use a single
         // thread with an unbounded queue.
@@ -154,6 +157,7 @@ public class InputStreamThread implements Runnable {
 							}
 							
 							// success
+							info.touchLastReceivedTime();
 							this.addResponse(response);
 						} else {
 							log.warn("expected start byte but got this " + ByteUtils.toBase16(val) + ", discarding");

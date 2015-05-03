@@ -50,6 +50,7 @@ public class XBee implements IXBee {
 	private XBeeConnection xbeeConnection;
 	private InputStreamThread parser;	
 	private XBeeConfiguration conf;
+	private XBeeInformation info;
 	private RadioType type;
 	
 	public XBee() {
@@ -69,11 +70,12 @@ public class XBee implements IXBee {
 			    }
 			});			
 		}
+		info = new XBeeInformation();
 	}
 	
 	private void doStartupChecks() throws XBeeException {
 		// Perform startup checks
-		try {				
+		try {
 			AtCommandResponse ap = this.sendAtCommand(new AtCommand("AP"));
 
 			if (!ap.isOk()) {
@@ -103,18 +105,39 @@ public class XBee implements IXBee {
 			
 			if (radioType == RadioType.UNKNOWN) {
 				log.warn("Unknown radio type (HV): " + ap.getValue()[0]);
-			}	
+			}
 			
+			info.setHardwareVersion(radioType);
+
 			AtCommandResponse vr = this.sendAtCommand(new AtCommand("VR"));
 			
 			if (vr.isOk()) {
 				log.info("Firmware version is " + ByteUtils.toBase16(vr.getValue()));
 			}
 			
+			info.setFirmwareVersion(vr.getValue());
+			
 			this.clearResponseQueue();
 		} catch (XBeeTimeoutException ex) {
 			throw new XBeeException("AT command timed-out while attempt to set/read in API mode.  Check that the XBee radio is in API mode (AP=2); it will not function propertly in AP=1");
 		}		
+	}
+
+	private void doStartupGetInformation() throws XBeeException {
+		try {
+			AtCommandResponse id = this.sendAtCommand(new AtCommand("ID"));
+			info.setPanID(id.getValue());
+
+			AtCommandResponse sh = this.sendAtCommand(new AtCommand("SH"));
+			info.setSerialHigh(sh.getValue());
+
+			AtCommandResponse sl = this.sendAtCommand(new AtCommand("SL"));
+			info.setSerialLow(sl.getValue());
+			
+		} catch (XBeeTimeoutException ex) {
+			throw new XBeeException("AT command timed-out while attempt to set/read in API mode.  Check that the XBee radio is in API mode (AP=2); it will not function propertly in AP=1");
+		}
+		
 	}
 	
 	/**
@@ -165,11 +188,14 @@ public class XBee implements IXBee {
 		try {			
 			this.xbeeConnection = conn;
 			
-			parser = new InputStreamThread(this.xbeeConnection, conf);
+			parser = new InputStreamThread(this.xbeeConnection, conf, info);
 			
 			// startup heuristics
 			if (conf.isStartupChecks()) {
 				this.doStartupChecks();
+			}
+			if (conf.isStartupGetInformation()) {
+				this.doStartupGetInformation();
 			}
 		} catch (XBeeException e) {
 			throw e;
@@ -621,5 +647,9 @@ public class XBee implements IXBee {
 		}
 		
 		parser.getResponseQueue().clear();
+	}
+	
+	public XBeeInformation getInformation() {
+		return info;
 	}
 }

@@ -4,6 +4,7 @@ public class XBeeConfiguration {
 
 	private boolean shutdownHook = false;
 	private boolean startupChecks = true;
+	private boolean getInformation = true;
 	private int maxQueueSize = 100;
 	private int sendSynchronousTimeout = 5000;
 	private ResponseFilter responseQueueFilter;
@@ -39,6 +40,11 @@ public class XBeeConfiguration {
 	 */
 	public XBeeConfiguration withStartupChecks(boolean startupChecks) {
 		this.startupChecks = startupChecks;
+		return this;
+	}
+	
+	public XBeeConfiguration withStartupGetInformation(boolean getInformation) {
+		this.getInformation = getInformation;
 		return this;
 	}
 
@@ -95,5 +101,9 @@ public class XBeeConfiguration {
 
 	public boolean isShutdownHook() {
 		return shutdownHook;
+	}
+
+	public boolean isStartupGetInformation() {
+		return getInformation;
 	}
 }

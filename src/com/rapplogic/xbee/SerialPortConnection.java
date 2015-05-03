@@ -67,7 +67,7 @@ public class SerialPortConnection implements XBeeConnection, SerialPortEventList
 
 	public void openSerialPort(String port, String appName, int timeout, int baudRate, int dataBits, int stopBits, int parity, int flowControl) throws TooManyListenersException, IOException, XBeeException, SerialPortException {
 		// Apparently you can't query for a specific port, but instead must iterate
-		Set<String> serialPorts = new HashSet<>(Arrays.asList(SerialPortList.getPortNames()));
+		Set<String> serialPorts = new HashSet<String>(Arrays.asList(SerialPortList.getPortNames()));
 
 		if (!serialPorts.contains(port)) {
 			throw new XBeeException("Could not find port: " + port);
@@ -121,7 +121,9 @@ public class SerialPortConnection implements XBeeConnection, SerialPortEventList
 	public int getByte() throws IOException {
 		try {
 			return serialPort.readBytes(1, timeout)[0] & 0xFF;
-		} catch (SerialPortException | SerialPortTimeoutException e) {
+		} catch (SerialPortException e) {
+			throw new IOException(e);
+		} catch (SerialPortTimeoutException e) {
 			throw new IOException(e);
 		}
 	}
