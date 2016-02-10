@@ -87,8 +87,6 @@ public class ZBForceSampleExample {
 	}
 
 	public static void main(String[] args) throws Exception {
-		// init log4j
-		PropertyConfigurator.configure("log4j.properties");
 		new ZBForceSampleExample();
 	}
 }

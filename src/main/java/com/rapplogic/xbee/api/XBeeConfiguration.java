@@ -2,6 +2,7 @@ package com.rapplogic.xbee.api;
 
 import com.rapplogic.xbee.api.responses.NoRequestResponse;
 import com.rapplogic.xbee.connections.connectionprovider.IConnectionProvider;
+import com.rapplogic.xbee.connections.connectionprovider.SerialPortConnectionProvider;
 
 public class XBeeConfiguration {
 
@@ -19,7 +20,7 @@ public class XBeeConfiguration {
 	};
 	
 	public XBeeConfiguration() {
-
+		
 	}
 
 	/**
@@ -73,6 +74,11 @@ public class XBeeConfiguration {
 
 	public XBeeConfiguration withConnectionProvider(IConnectionProvider connectionProvider) {
 		this.connectionProvider = connectionProvider;
+		return this;
+	}
+	
+	public XBeeConfiguration withDefaultConnectionProvider() {
+		this.connectionProvider = new SerialPortConnectionProvider();
 		return this;
 	}
 	

@@ -176,7 +176,6 @@ public class ZNetSenderExample {
 	}
 	
 	public static void main(String[] args) throws XBeeException, InterruptedException  {
-		PropertyConfigurator.configure("log4j.properties");
 		new ZNetSenderExample();
 	}
 }

@@ -51,7 +51,6 @@ public class RemoteAtExample {
 		try {
 			// replace with your coordinator com/baud
 			xbee.open("/dev/tty.usbserial-A6005v5M", 9600);
-			// xbee.open("COM5", 9600);			
 			
 			// replace with SH + SL of your end device
 			XBeeAddress64 addr64 = new XBeeAddress64(0, 0x13, 0xa2, 0, 0x40, 0x0a, 0x3e, 0x02);
@@ -100,7 +99,6 @@ public class RemoteAtExample {
 	}
 	
 	public static void main(String[] args) throws XBeeException, InterruptedException {
-		PropertyConfigurator.configure("log4j.properties");
 		new RemoteAtExample();
 	}
 }

@@ -44,7 +44,7 @@ public class ApiAtExample {
 	 
 	private final static Logger log = Logger.getLogger(ApiAtExample.class);
 	
-	private XBee xbee = new XBee(new XBeeConfiguration().withStartupChecks(false));
+	private XBee xbee = new XBee(new XBeeConfiguration().withStartupChecks(false).withDefaultConnectionProvider());
 	
 	public ApiAtExample() throws XBeeException {
 			
@@ -72,7 +72,6 @@ public class ApiAtExample {
 	}
 	
 	public static void main(String[] args) throws XBeeException {
-		PropertyConfigurator.configure("log4j.properties");
 		new ApiAtExample();
 	}
 }

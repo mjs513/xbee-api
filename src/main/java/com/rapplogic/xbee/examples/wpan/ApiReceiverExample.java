@@ -20,7 +20,6 @@
 package com.rapplogic.xbee.examples.wpan;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 
 import com.rapplogic.xbee.api.ApiId;
 import com.rapplogic.xbee.api.XBee;
@@ -42,8 +41,6 @@ public class ApiReceiverExample {
 
 	private final static Logger log = Logger.getLogger(ApiReceiverExample.class);
 
-	private long last = System.currentTimeMillis();
-	
 	private ApiReceiverExample() throws Exception {
 		XBee xbee = new XBee();		
 		
@@ -92,8 +89,6 @@ public class ApiReceiverExample {
 	}
 
 	public static void main(String[] args) throws Exception {
-		// init log4j
-		PropertyConfigurator.configure("log4j.properties");
 		new ApiReceiverExample();
 	}
 }

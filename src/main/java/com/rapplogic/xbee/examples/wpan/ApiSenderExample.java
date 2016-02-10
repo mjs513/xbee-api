@@ -20,7 +20,6 @@
 package com.rapplogic.xbee.examples.wpan;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 
 import com.rapplogic.xbee.api.ApiId;
 import com.rapplogic.xbee.api.XBee;
@@ -28,7 +27,6 @@ import com.rapplogic.xbee.api.XBeeAddress16;
 import com.rapplogic.xbee.api.XBeePacket;
 import com.rapplogic.xbee.api.XBeeResponse;
 import com.rapplogic.xbee.api.wpan.TxRequest16;
-import com.rapplogic.xbee.api.wpan.TxRequest64;
 import com.rapplogic.xbee.api.wpan.TxStatusResponse;
 
 /**
@@ -59,6 +57,7 @@ public class ApiSenderExample {
 		try {
 			// replace with port and baud rate of your XBee
 			xbee.open("/dev/tty.usbserial-A6005uPi", 9600);
+			//xbee.open("COM6", 38400);
 
 			while (true) {
 
@@ -128,8 +127,6 @@ public class ApiSenderExample {
 	}
 
 	public static void main(String[] args) throws Exception {
-		// init log4j
-		PropertyConfigurator.configure("log4j.properties");
 		new ApiSenderExample();
 	}
 }

@@ -22,10 +22,7 @@ package com.rapplogic.xbee.examples.zigbee;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 
-import com.rapplogic.xbee.api.ApiId;
-import com.rapplogic.xbee.api.PacketListener;
 import com.rapplogic.xbee.api.XBee;
 import com.rapplogic.xbee.api.XBeeException;
 import com.rapplogic.xbee.api.XBeeResponse;
@@ -90,7 +87,6 @@ public class ZBNodeDiscoverExample {
 	}
 	
 	public static void main(String[] args) throws XBeeException, InterruptedException {
-		PropertyConfigurator.configure("log4j.properties");
 		new ZBNodeDiscoverExample();
 	}
 }

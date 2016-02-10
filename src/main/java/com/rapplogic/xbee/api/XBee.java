@@ -31,7 +31,6 @@ import com.rapplogic.xbee.api.HardwareVersion.RadioType;
 import com.rapplogic.xbee.api.requests.AtCommand;
 import com.rapplogic.xbee.api.responses.AtCommandResponse;
 import com.rapplogic.xbee.api.responses.XBeeFrameIdResponse;
-import com.rapplogic.xbee.connections.SerialPortConnection;
 import com.rapplogic.xbee.connections.XBeeConnection;
 import com.rapplogic.xbee.connections.connectionprovider.IConnectionProvider;
 import com.rapplogic.xbee.connections.connectionprovider.SerialPortConnectionProvider;

@@ -27,7 +27,7 @@ public class SleepTestCoordinator {
 		
 		PropertyConfigurator.configure("log4j.properties");
 		
-		XBee xbee = new XBee(new XBeeConfiguration().withStartupChecks(false));
+		XBee xbee = new XBee(new XBeeConfiguration().withStartupChecks(false).withDefaultConnectionProvider());
 		
 		//coord
 		xbee.open("/dev/tty.usbserial-A6005uRz", 9600);
